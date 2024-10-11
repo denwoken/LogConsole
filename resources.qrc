@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/3vertical-lines.png</file>
+        <file>resources/filters_icon.png</file>
+        <file>resources/minus_icon.png</file>
+        <file>resources/plus_icon.png</file>
+        <file>resources/settings_icon.png</file>
+        <file>resources/StyleSheetTolmi1.qss</file>
+        <file>resources/trash_bin_icon.png</file>
+    </qresource>
+</RCC>
