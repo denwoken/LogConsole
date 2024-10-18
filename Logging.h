@@ -18,6 +18,9 @@ void setEnableDebug(bool enable);
 void setLogConsole(LogConsoleWidget *Console);
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
+
+LogConsoleWidget* quickNewConsole();
+
 }
 
 
