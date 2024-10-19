@@ -3,7 +3,8 @@
 
 
 #include <qlogging.h>
-
+#include "LogConsoleWidget.h"
+#include "qdebug.h"
 
 namespace Logging{
 

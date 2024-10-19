@@ -19,6 +19,9 @@
 using namespace Logging;
 const int line_count = 50; // count in block (for history & processing)
 
+//загрука ресурсов (при загрузке статической )
+static bool initMyResources() { Q_INIT_RESOURCE(resources); return true; }
+static volatile bool dummy = initMyResources(); // Это выполнится при загрузке библиотеки
 
 ConsoleFormatter::ConsoleFormatter(LogConsoleWidget *cli)
 {
@@ -315,6 +318,7 @@ bool ConsoleFormatter::isFunctionChecked(const QString &func)
             }
         }
     }
+    return true;
 }
 
 

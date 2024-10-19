@@ -36,4 +36,5 @@ RESOURCES += \
     resources.qrc
 
 DISTFILES += \
+    CMakeLists.txt \
     LogConsole.pri

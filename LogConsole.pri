@@ -22,3 +22,9 @@ HEADERS += \
 
 RESOURCES += \
     $$PWD/resources.qrc
+
+
+
+#для подключения модуля:
+# include($$PWD/LogConsole/LogConsole.pri)
+# INCLUDEPATH += $$PWD/LogConsole

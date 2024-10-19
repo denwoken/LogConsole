@@ -33,6 +33,8 @@ QString Logging::msgTypeToString(QtMsgType type)
         return "FATAL";
     case QtInfoMsg:
         return "INFO";
+    default:
+        return "";
     }
 }
 QtMsgType Logging::StringToMsgType(QString str)
@@ -47,6 +49,7 @@ QtMsgType Logging::StringToMsgType(QString str)
         return QtCriticalMsg;
     else if(str.contains("FATAL", Qt::CaseInsensitive))
         return QtFatalMsg;
+    return QtFatalMsg;
 }
 
 /*!
