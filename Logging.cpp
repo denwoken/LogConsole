@@ -16,7 +16,7 @@ static bool m_enableFile = true;
 static bool m_enableDebug = true;
 static QMutex mutex;
 
-static Logging::LogConsoleWidget *Console = nullptr;
+static QScopedPointer<Logging::LogConsoleWidget> Console;
 
 
 QString Logging::msgTypeToString(QtMsgType type)
@@ -185,9 +185,11 @@ void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, 
         emit Console->sigAppendFormatedLine(type, date, func, msg);
 }
 
+
 void Logging::setLogConsole(LogConsoleWidget *c)
 {
-    Console = c;
+    if(c)
+        Console.reset(c);
 }
 
 
