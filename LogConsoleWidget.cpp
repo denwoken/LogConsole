@@ -387,7 +387,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
     connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, [this](bool onTop) {
         // Устанавливаем флаг поверх всех окон
         setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
-        //show();
+        show();
     });
     connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, [this](bool hideTitle) {
         // Устанавливаем флаг скрытия заголовка окна
@@ -402,7 +402,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
             point.ry() -= 31;
         }
         this->move(point);
-        //this->show();
+        this->show();
     });
 
 

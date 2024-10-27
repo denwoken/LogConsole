@@ -182,7 +182,7 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
     Console->setLogFilePath(logDir.absoluteFilePath(logFileName));
     setLoggingFile(Console->getLogFilePath());
 
-/*
+
     if(parent == nullptr){
         // установка SteleSheets
         QFile f(":/resources/StyleSheetTolmi1.qss");
@@ -191,7 +191,7 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
         f.close();
         Console->setStyleSheet(style + "QWidget { background-color: rgb(32,32,32); }");
     }
-*/
+
     //загрузка настроек
     QString defSettings(logDir.absoluteFilePath("ConsoleDefaultSettings.ini"));
     if(QFileInfo::exists(defSettings))
