@@ -119,10 +119,10 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     Hlayout1->addWidget(m_checkAll);
     m_checkAll->setChecked(true);
     m_checkAll->setTristate(true);
-    connect(m_checkAll, &QCheckBox::clicked, [=](bool st) {
+    connect(m_checkAll, &QCheckBox::clicked, [=]() {
         if(m_checkAll->checkState() == Qt::PartiallyChecked) m_checkAll->setCheckState(Qt::Checked);
     });
-    connect(m_checkAll, &QCheckBox::stateChanged, [=](int st) {
+    connect(m_checkAll, &QCheckBox::stateChanged, [=]() {
         updateChildCheckBoxes(m_treeWidget->invisibleRootItem());
     });
 
@@ -237,10 +237,10 @@ QCheckBox* FunctionSelectorWidget::addCheckBoxToItem(QTreeWidgetItem *item)
     // widget->setLayout(layout);
     m_treeWidget->setItemWidget(item, 1, checkbox);
 
-    connect(checkbox, &QCheckBox::clicked, [=](bool st) {
+    connect(checkbox, &QCheckBox::clicked, [=]() {
         if(checkbox->checkState() == Qt::PartiallyChecked) checkbox->setCheckState(Qt::Checked);
     });
-    connect(checkbox, &QCheckBox::stateChanged, [=](int st) {
+    connect(checkbox, &QCheckBox::stateChanged, [=]() {
         updateParentCheckBox(item);
         updateChildCheckBoxes(item);
     });

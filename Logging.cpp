@@ -121,36 +121,6 @@ void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, 
     QString typeMsg = msgTypeToString(type);
 
 
-    //Код ниже является костылем для решения проблемы. Задаваемый ранее паттерн нормально работал
-    //только если методы печати вызывались из методов класса находящихся в неймспейсе,
-    //по тиу такого ClassName::MethodName. Если, например, неймспейса
-    //не было или печать из свободной функции, то условие rx.indexIn(context.function) != -1
-    //не проходило проверку, и ни чего не печаталось в консоль/файл. Поэтому
-    //теперь 4 отдельный QRegExp для случаев с 1, 2, 3, 4 вложености. Это наверняка
-    //можно решить изящно и красиво, но нет ни времени, ни желания разбираться с тем
-    //как работают регулярные выражения
-    /*
-    //На случай Namespace::Namespace::Class::Method
-    QRegExp rx("([\\w-]+::[\\w-]+::[\\w-]+::[\\w-]+)");
-    //На случай Namespace::Class::Method
-    QRegExp rx2("([\\w-]+::[\\w-]+::[\\w-]+)");
-    //На случай Class::Method
-    QRegExp rx3("([\\w-]+::[\\w-]+)");
-    //На случай свободной функции
-    QRegExp rx4("([\\w-]+)");
-
-    if(rx.indexIn(context.function) != -1)
-        str = time + typeMsg + rx.cap(1) + ": " + msg;
-    else if(rx2.indexIn(context.function) != -1)
-        str = time + typeMsg + rx2.cap(1) + ": " + msg;
-    else if(rx3.indexIn(context.function) != -1)
-        str = time + typeMsg + rx3.cap(1) + ": " + msg;
-    else if(rx4.indexIn(context.function) != -1)
-        str = time + typeMsg + rx4.cap(1) + ": " + msg;
-    else
-        str = time + typeMsg + ": " + msg + " (Logging RegExp error)";
-    */
-
     // Ищем подстроку, которая начинается с последнего пробела
     QString func = context.function;
     int lastIndex = func.lastIndexOf('(');
@@ -194,38 +164,34 @@ void Logging::setLogConsole(LogConsoleWidget *c)
 
 
 
-Logging::LogConsoleWidget *Logging::quickNewConsole()
+Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
 {
-    using namespace Logging;
-    QDir logDir = QDir::currentPath();
-    if(!logDir.exists("logs")) logDir.mkdir("logs"); // создаем папку logs если ее нет
-    logDir.cd("logs");
-    QDateTime date = QDateTime::currentDateTime();
-    QString logFileName = date.toString("yyyy-MM-dd hh-mm-ss-zzz ") + "logFile.log";
-
-    // создаем файл для логов
-    QFile file(logDir.absoluteFilePath(logFileName));
-    if(file.open(QIODevice::WriteOnly)) file.close();
-    else qCritical() << "Файл для логов не создан: " << logDir.absoluteFilePath(logFileName);
-
-    setLoggingFile(logDir.absoluteFilePath(logFileName));
     setEnableFileLogging(true);
     setEnableConsoleLogging(true);
     setEnableDebug(true);
     qInstallMessageHandler(messageHandler);
-
-
-    LogConsoleWidget *Console = new LogConsoleWidget();
-
-    // установка SteleSheets
-    QFile f(":/resources/StyleSheetTolmi1.qss");
-    f.open(QFile::ReadOnly);
-    QString style = f.readAll();
-    f.close();
-    Console->setStyleSheet(style + "QWidget { background-color: rgb(32,32,32); }");
-
+    LogConsoleWidget *Console = new LogConsoleWidget(parent);
     setLogConsole(Console);
 
+    QDir logDir = QDir::currentPath();
+    if(!logDir.exists("Logs")) logDir.mkdir("Logs");  // создаем папку logs если ее нет
+    logDir.cd("Logs");
+    QDateTime date = QDateTime::currentDateTime();
+    QString logFileName = date.toString("yyyy-MM-dd hh-mm-ss-zzz ") + "logFile.log";
+
+    Console->setLogFilePath(logDir.absoluteFilePath(logFileName));
+    setLoggingFile(Console->getLogFilePath());
+
+/*
+    if(parent == nullptr){
+        // установка SteleSheets
+        QFile f(":/resources/StyleSheetTolmi1.qss");
+        f.open(QFile::ReadOnly);
+        QString style = f.readAll();
+        f.close();
+        Console->setStyleSheet(style + "QWidget { background-color: rgb(32,32,32); }");
+    }
+*/
     //загрузка настроек
     QString defSettings(logDir.absoluteFilePath("ConsoleDefaultSettings.ini"));
     if(QFileInfo::exists(defSettings))
@@ -234,10 +200,9 @@ Logging::LogConsoleWidget *Logging::quickNewConsole()
         Console->saveSettings(defSettings); // сохраняем дефолтные настройки
 
 
-    //QElapsedTimer tim;
-    //tim.start();
-    //загружаем историю
-    Console->loadLogsHistory(logDir.absoluteFilePath(logFileName));
-    return Console;
+    //загружаем историю ? файл новый, нечего загружать
+    //Console->loadLogsHistory(logDir.absoluteFilePath(logFileName));
 
+    return Console;
 }
+

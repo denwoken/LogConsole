@@ -1,9 +1,11 @@
 #include <QApplication>
 #include "Logging.h"
+#include "LogConsoleWidget.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
 
     auto console = Logging::quickNewConsole();
     console->show();

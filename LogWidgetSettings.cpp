@@ -1,6 +1,7 @@
 #include "LogWidgetSettings.h"
 #include "LogConsoleWidget.h"
 #include "qcolordialog.h"
+#include "qdebug.h"
 #include "ui_LogWidgetSettings.h"
 
 using namespace Logging;
@@ -55,6 +56,7 @@ LogWidgetSettings::LogWidgetSettings(LogConsoleWidget *parent):
 LogWidgetSettings::~LogWidgetSettings()
 {
     delete ui;
+    delete m_colorDialog;
 }
 
 void LogWidgetSettings::loadSettings()
@@ -70,6 +72,7 @@ void LogWidgetSettings::loadSettings()
     ui->spinBox_fontSize->setValue(font.pointSize());
 
     ui->checkBox_enExtendedColors->setChecked(m_console->m_settings.extendedColors);
+    ui->checkBoxRestoreSize->setChecked(m_console->m_settings.restoreWindowPosSize);
 
     ui->checkBox_dispDate->setChecked(m_console->m_settings.dispField.date);
     ui->checkBox_dispTime->setChecked(m_console->m_settings.dispField.time);
@@ -110,6 +113,7 @@ void LogWidgetSettings::saveSettings()
     m_console->m_settings.textFormat.setFont(font);
 
     m_console->m_settings.extendedColors = ui->checkBox_enExtendedColors->isChecked();
+    m_console->m_settings.restoreWindowPosSize = ui->checkBoxRestoreSize->isChecked();
 
     m_console->m_settings.dispField.date = ui->checkBox_dispDate->isChecked();
     m_console->m_settings.dispField.time = ui->checkBox_dispTime->isChecked();

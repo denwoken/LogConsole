@@ -8,13 +8,14 @@
 #include "qlocale.h"
 #include "qscrollbar.h"
 #include "qsettings.h"
+#include "qevent.h"
 #include "qstandarditemmodel.h"
 #include "qtextdocumentfragment.h"
 #include "ui_logconsolewidget.h"
 #include <QWidget>
 #include <QTextEdit>
 #include <QtConcurrent>
-
+#include <QScreen>
 
 using namespace Logging;
 const int line_count = 50; // count in block (for history & processing)
@@ -383,6 +384,30 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
         }
     });
 
+    connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, [this](bool onTop) {
+        // Устанавливаем флаг поверх всех окон
+        setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        //show();
+    });
+    connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, [this](bool hideTitle) {
+        // Устанавливаем флаг скрытия заголовка окна
+        setWindowFlag(Qt::FramelessWindowHint, hideTitle);
+        QPoint point = this->pos();
+        if(hideTitle){
+            point.rx() += 8;
+            point.ry() += 31;
+        }
+        else{
+            point.rx() -= 8;
+            point.ry() -= 31;
+        }
+        this->move(point);
+        //this->show();
+    });
+
+
+
+
     //подключаем кнопку очистки консоли к очистке истории и textEdit
     connect(ui->pushButton_clear, &QPushButton::clicked, [&](){
         QMutexLocker locker(&m_mutex);
@@ -502,6 +527,10 @@ bool LogConsoleWidget::saveSettings(QString path)
     saving.endGroup();
 
     saving.setValue("extendedColors", QVariant((bool)m_settings.extendedColors));
+    saving.setValue("hideTitle", QVariant((bool)ui->checkBoxHideTitle->isChecked()));
+    saving.setValue("onTopHint", QVariant((bool)ui->checkBoxOnTopHint->isChecked()));
+    saving.setValue("restoreWindowPosSize", QVariant((bool)m_settings.restoreWindowPosSize));
+    saving.setValue("WindowRect", QVariant(frameGeometry()));
     saving.setValue("FontName", m_settings.textFormat.fontFamily());
     saving.setValue("FontSize", m_settings.textFormat.fontPointSize());
 
@@ -569,6 +598,24 @@ bool LogConsoleWidget::loadSettings(QString path)
     saving.endGroup();
 
     m_settings.extendedColors = saving.value("extendedColors").toBool();
+    bool hideTitle = saving.value("hideTitle").toBool();
+    ui->checkBoxHideTitle->setChecked(hideTitle);
+    emit ui->checkBoxHideTitle->stateChanged(ui->checkBoxHideTitle->checkState());
+    bool onTopHint = saving.value("onTopHint").toBool();
+    ui->checkBoxOnTopHint->setChecked(onTopHint);
+    emit ui->checkBoxOnTopHint->stateChanged(ui->checkBoxOnTopHint->checkState());
+
+    m_settings.restoreWindowPosSize = saving.value("restoreWindowPosSize").toBool();
+    QRect rect = saving.value("WindowRect").toRect();
+    if(!rect.isEmpty()){
+        if(QApplication::primaryScreen()->geometry().contains(rect.bottomRight()))
+        {
+            if(m_settings.restoreWindowPosSize){
+                resize(rect.size());
+                move(rect.topLeft());
+            }
+        }
+    }
     m_settings.textFormat.setFontFamily(saving.value("FontName").toString());
     m_settings.textFormat.setFontPointSize(saving.value("FontSize").toInt());
 
@@ -584,6 +631,12 @@ bool LogConsoleWidget::loadSettings(QString path)
     saving.endGroup();
 
     m_FuncSelector->updateEnablesLogMsgs();
+
+    //###
+    QStandardItemModel* mod = m_FuncSelector->convertToStandardItemModel();
+    if(m_settings.functions)
+        delete m_settings.functions;
+    m_settings.functions = mod;
 
     return false;
 }
@@ -708,6 +761,22 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
     return true;
 }
 
+QString LogConsoleWidget::getLogFilePath()
+{
+    return m_logFilePath;
+}
+
+void LogConsoleWidget::setLogFilePath(const QString &path)
+{
+    // создаем файл для логов если нужно
+    QFile file(path);
+    if(file.open(QIODevice::WriteOnly)){
+        file.close();
+        m_logFilePath = path;
+    }
+    else
+        qCritical() << "Файл для логов не создан: " << path;
+}
 
 void LogConsoleWidget::appendFormatedLine(const QString &line)
 {
@@ -792,6 +861,32 @@ void LogConsoleWidget::insertFrontDocumentFragment(const QTextDocumentFragment &
     // Вставляем сформированный фрагмент в текущее положение курсора
     cursor.insertFragment(fragment);
     cursor.endEditBlock();
+}
+
+void LogConsoleWidget::mousePressEvent(QMouseEvent *event) {
+    // Проверяем, что клик произошел на области заголовка
+    if ((event->button() & Qt::LeftButton) &&
+        ui->horizontalSpacer->geometry().contains(event->pos())) {
+        m_dragging = true;
+        m_dragPosition = event->globalPos() - frameGeometry().topLeft();
+        event->accept();
+    }
+    QWidget::mousePressEvent(event);
+}
+
+void LogConsoleWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (m_dragging && (event->buttons() & Qt::LeftButton)) {
+        move(event->globalPos() - m_dragPosition);
+        event->accept();
+    }
+    QWidget::mouseMoveEvent(event);
+}
+void LogConsoleWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() & Qt::LeftButton) {
+        m_dragging = false;
+        event->accept();
+    }
+    QWidget::mouseReleaseEvent(event);
 }
 
 QList<QVector<LogLine>> LogConsoleWidget::separateIntoBlocks(QVector<LogLine> &list)

@@ -3,13 +3,19 @@
 
 
 #include <qlogging.h>
-#include "LogConsoleWidget.h"
-#include "qdebug.h"
+#include <qdebug.h>
+class QWidget;
 
-namespace Logging{
+/*!
+ *  Quick get started example
 
+    using namespace Tolmi::Logging;
+    LogConsoleWidget* console = quickNewConsole();
+    console->show();
+ */
+namespace Logging
+{
 class LogConsoleWidget;
-
 QString msgTypeToString(QtMsgType type);
 QtMsgType StringToMsgType(QString str);
 void setLoggingFile(const QString &filePath);
@@ -19,8 +25,8 @@ void setEnableDebug(bool enable);
 void setLogConsole(LogConsoleWidget *Console);
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
+LogConsoleWidget* quickNewConsole(QWidget* parent = nullptr);
 
-LogConsoleWidget* quickNewConsole();
 
 }
 

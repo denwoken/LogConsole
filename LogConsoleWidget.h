@@ -2,10 +2,10 @@
 #define LOGCONSOLEWIDGET_H
 
 
+#include "Logging.h"
 #include "qdatetime.h"
 #include "qmutex.h"
-#include "qtextdocumentfragment.h"
-#include "qtextformat.h"
+#include "qtextcursor.h"
 #include <QWidget>
 
 
@@ -110,6 +110,7 @@ struct ConsoleSettings
 
     }colors;
     bool extendedColors;
+    bool restoreWindowPosSize;
     QTextCharFormat textFormat;
     //QDate filterStartDate;
     // QDate filterEndDate;
@@ -192,6 +193,17 @@ public:
      */
     bool loadLogsHistory(QString path);
 
+    /*!
+     * \brief getLogFilePath геттер для получения пути до файла в котором храняться логи.
+     */
+    QString getLogFilePath();;
+    /*!
+     * \brief setLogFilePath устанавливает путь до файла с логами, но не загружает историю логов!
+     *  loadLogsHistory(..) загружает историю и устанавливает setLogFilePath(..)
+     *  Даная функция по факту является не нужной тк класс не пишет логи в файл сам..
+     */
+    void setLogFilePath(const QString& path);;
+
 
     /*!
      * \brief appendFormatedLine добавляет строку в виджет с заданным шаблоном.
@@ -218,6 +230,10 @@ public:
 
 
     //void appendLine(const QString& line);
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 signals:
     /*!
@@ -253,6 +269,9 @@ private:
     QVector<LogLine> m_history;
 
     QVector<QColor> m_customColors;
+
+    bool m_dragging = false;
+    QPoint m_dragPosition;
 
 
     friend class ConsoleHighlighter;
