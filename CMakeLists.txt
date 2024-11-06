@@ -36,12 +36,11 @@ set(PROJECT_SOURCES
     LogWidgetSettings.cpp
     Logging.cpp
     main.cpp
-)
 
-# Добавим заголовочные файлы
-set(PROJECT_HEADERS
     FunctionSelectorWidget.h
     Logging.h
+    LogConsoleWidget.h
+    LogWidgetSettings.h
 )
 
 # Добавим файлы форм
@@ -49,17 +48,11 @@ set(PROJECT_UI
     LogConsoleWidget.ui
     LogWidgetSettings.ui
 )
-set(PROJECT_UI_HEADERS
-    LogConsoleWidget.h
-    LogWidgetSettings.h
-)
 
 # Добавим ресурсы
 set(PROJECT_RESOURCES
     resources.qrc
 )
-
-
 
 # compile
 add_library(${PROJECT_NAME} STATIC
@@ -68,7 +61,6 @@ add_library(${PROJECT_NAME} STATIC
     ${PROJECT_RESOURCES}
     ${PROJECT_UI}
 )
-
 
 target_include_directories(${PROJECT_NAME} PUBLIC ./)
 
