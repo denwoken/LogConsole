@@ -21,7 +21,7 @@ using namespace Logging;
 const int line_count = 50; // count in block (for history & processing)
 
 //загрука ресурсов (при загрузке статической )
-static bool initMyResources() { Q_INIT_RESOURCE(resources); return true; }
+static bool initMyResources() { Q_INIT_RESOURCE(ConsoleResources); return true; }
 static volatile bool dummy = initMyResources(); // Это выполнится при загрузке библиотеки
 
 ConsoleFormatter::ConsoleFormatter(LogConsoleWidget *cli)
@@ -349,22 +349,22 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
     m_settings.enableLogMsgs.warningMsg = true;
     m_settings.functions = nullptr;
     m_settings.extendedColors = true;
-    m_settings.textFormat.setFontFamily("Arial Black");
-    m_settings.textFormat.setFontPointSize(11);
+    m_settings.textFormat.setFontFamily("Consolas");
+    m_settings.textFormat.setFontPointSize(14);
 
-    m_settings.colors.date = QColor(0, 0, 0xff);                 //"#0000ff"
-    m_settings.colors.time = QColor(0xaa, 0, 0xff);              //"#aa00ff"
-    m_settings.colors.logLevel = QColor(0x55, 0xff, 0);          //"#55ff00"
-    m_settings.colors.messageSource = QColor(0x55, 0xaa, 0xff);  //"#55aaff"
+    m_settings.colors.date = QColor(0, 0x6e, 0xa5);                 //"#0000ff"
+    m_settings.colors.time = QColor(0x00, 0x88, 0xcc);              //"#aa00ff"
+    m_settings.colors.logLevel = QColor(0xff, 0xaa, 0);          //"#55ff00"
+    m_settings.colors.messageSource = QColor(0x00, 0xaa, 0xff);  //"#55aaff"
 
-    m_settings.colors.infoMessage = QColor(0, 0, 0xff);        //"#0000ff"
-    m_settings.colors.warningMessage = QColor(0xff, 0xaa, 0);  //"#ffaa00"
-    m_settings.colors.debugMessage = QColor(0, 0, 0);          //"#000000"
+    m_settings.colors.infoMessage = QColor(0, 0xe6, 0x73);        //"#0000ff"
+    m_settings.colors.warningMessage = QColor(0xff, 0xff, 0x3c);  //"#ffaa00"
+    m_settings.colors.debugMessage = QColor(0x20, 0x20, 0x20);          //0xc8, 0xc8, 0xc8
     m_settings.colors.fatalMessage = QColor(0xff, 0, 0);       //"#ff0000"
-    m_settings.colors.criticalMessage = QColor(0xff, 0, 0);    //"#ff0000"
+    m_settings.colors.criticalMessage = QColor(0xff, 0x4b, 0x4b);    //"#ff0000"
 
     m_settings.colors.fatalMessageBg = QColor(0, 0, 0);              //"#000000"
-    m_settings.colors.criticalMessageBg = QColor(0x86, 0x86, 0x86);  //"#868686"
+    m_settings.colors.criticalMessageBg = QColor(0x2d, 0x2d, 0x2d);  //"#868686"
 
 
 
@@ -386,8 +386,9 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
 
     connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, [this](bool onTop) {
         // Устанавливаем флаг поверх всех окон
+        bool isHidden = this->isHidden();
         setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
-        show();
+        if(!isHidden) show();
     });
     connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, [this](bool hideTitle) {
         // Устанавливаем флаг скрытия заголовка окна
@@ -402,7 +403,8 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
             point.ry() -= 31;
         }
         this->move(point);
-        this->show();
+        bool isHidden = this->isHidden();
+        if(!isHidden) this->show();
     });
 
 
@@ -466,11 +468,11 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
         scroll->setValue(scroll->maximum());
     });
 
-    QIcon icon1(":/resources/trash_bin_icon.png");
+    QIcon icon1(":/Console/resources/trash_bin_icon.png");
     ui->pushButton_clear->setIcon(icon1);
-    QIcon icon2(":/resources/filters_icon.png");
+    QIcon icon2(":/Console/resources/filters_icon.png");
     ui->FilterButton->setIcon(icon2);
-    QIcon icon3(":/resources/settings_icon.png");
+    QIcon icon3(":/Console/resources/settings_icon.png");
     ui->settingsButton->setIcon(icon3);
 }
 

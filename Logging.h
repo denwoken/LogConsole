@@ -23,6 +23,7 @@ void setEnableFileLogging(bool enable);
 void setEnableConsoleLogging(bool enable);
 void setEnableDebug(bool enable);
 void setLogConsole(LogConsoleWidget *Console);
+LogConsoleWidget* getLogConsole();
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
 LogConsoleWidget* quickNewConsole(QWidget* parent = nullptr);

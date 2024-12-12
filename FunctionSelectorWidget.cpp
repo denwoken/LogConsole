@@ -30,7 +30,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     //кнопка для открытия меню
     m_logLevelButton = new QPushButton(this);
     m_logLevelButton->setFixedSize(24, 24);
-    m_logLevelButton->setIcon(QIcon(":/resources/3vertical-lines.png"));
+    m_logLevelButton->setIcon(QIcon(":/Console/resources/3vertical-lines.png"));
     Hlayout0->addWidget(m_logLevelButton);
 
 
@@ -139,7 +139,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     //кнопка добавления айтема (функции)
     m_addButton = new QPushButton(this);
     m_addButton->setFixedSize(24, 24);
-    m_addButton->setIcon(QIcon(":/resources/plus_icon.png"));
+    m_addButton->setIcon(QIcon(":/Console/resources/plus_icon.png"));
     connect(m_addButton, &QPushButton::clicked, [&](){
         this->addFunction(m_addField->text());
         sortItems();
@@ -149,7 +149,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     //кнопка удаления выбранного айтема (функции)
     m_removeButton = new QPushButton(this);
     m_removeButton->setFixedSize(24, 24);
-    m_removeButton->setIcon(QIcon(":/resources/minus_icon.png"));
+    m_removeButton->setIcon(QIcon(":/Console/resources/minus_icon.png"));
     connect(m_removeButton, &QPushButton::clicked, [&](){
         QList<QTreeWidgetItem*> items = m_treeWidget->selectedItems();
         for(QTreeWidgetItem* item : items){

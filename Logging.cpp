@@ -4,19 +4,25 @@
 #include <QDateTime>
 #include <QFile>
 #include <QMutex>
+#include <qapplication.h>
+#include <qthread.h>
 #include "LogConsoleWidget.h"
 #include "qdebug.h"
 #include "qdir.h"
 
 
-static QScopedPointer<QFile> m_logFile;
-static bool m_fileExist = false;
-static bool m_enableConsole = true;
-static bool m_enableFile = true;
-static bool m_enableDebug = true;
-static QMutex mutex;
+namespace Logging
+{
+    static QScopedPointer<QFile> m_logFile;
+    static bool m_fileExist = false;
+    static bool m_enableConsole = true;
+    static bool m_enableFile = true;
+    static bool m_enableDebug = true;
+    static QMutex mutex;
+    static LogConsoleWidget *Console;
+};
 
-static QScopedPointer<Logging::LogConsoleWidget> Console;
+
 
 
 QString Logging::msgTypeToString(QtMsgType type)
@@ -151,17 +157,29 @@ void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, 
         out.flush();
     }
     mutex.unlock();
-    if(Console)
+    if(Console){
         emit Console->sigAppendFormatedLine(type, date, func, msg);
+        // if(QThread::currentThread() == QApplication::instance()->thread())
+        //     Console->appendFormatedLine(type, date, func, msg); // напрямую если тотже поток
+        // else
+        // {
+        //     emit Console->sigAppendFormatedLine(type, date, func, msg); // через очередь
+        //     QApplication::processEvents(); // обрабатываем события (чтобы сообщение успело сделать вывод в виджет)
+        // }
+
+    }
+
 }
 
 
 void Logging::setLogConsole(LogConsoleWidget *c)
 {
-    if(c)
-        Console.reset(c);
+    Console = c;
 }
-
+Logging::LogConsoleWidget* Logging::getLogConsole()
+{
+    return Console;
+}
 
 
 Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
@@ -172,6 +190,10 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
     qInstallMessageHandler(messageHandler);
     LogConsoleWidget *Console = new LogConsoleWidget(parent);
     setLogConsole(Console);
+    QObject::connect(Console, &Logging::LogConsoleWidget::destroyed, [Console](){
+        if(Console == Logging::getLogConsole())
+            Logging::setLogConsole(nullptr);
+    });
 
     QDir logDir = QDir::currentPath();
     if(!logDir.exists("Logs")) logDir.mkdir("Logs");  // создаем папку logs если ее нет
@@ -182,16 +204,16 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
     Console->setLogFilePath(logDir.absoluteFilePath(logFileName));
     setLoggingFile(Console->getLogFilePath());
 
-
+/*
     if(parent == nullptr){
         // установка SteleSheets
-        QFile f(":/resources/StyleSheetTolmi1.qss");
+        QFile f(":/Console/resources/StyleSheetTolmi1.qss");
         f.open(QFile::ReadOnly);
         QString style = f.readAll();
         f.close();
         Console->setStyleSheet(style + "QWidget { background-color: rgb(32,32,32); }");
     }
-
+*/
     //загрузка настроек
     QString defSettings(logDir.absoluteFilePath("ConsoleDefaultSettings.ini"));
     if(QFileInfo::exists(defSettings))

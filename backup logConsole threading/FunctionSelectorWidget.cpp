@@ -33,7 +33,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     //кнопка для открытия меню
     m_logLevelButton = new QPushButton(this);
     m_logLevelButton->setFixedSize(24, 24);
-    m_logLevelButton->setIcon(QIcon(":/Icons/UiResources/Icons/3vertical-lines.png"));
+    m_logLevelButton->setIcon(QIcon(":/Console/Icons/UiResources/Icons/3vertical-lines.png"));
     Hlayout0->addWidget(m_logLevelButton);
 
 

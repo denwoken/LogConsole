@@ -51,7 +51,7 @@ set(PROJECT_UI
 
 # Добавим ресурсы
 set(PROJECT_RESOURCES
-    resources.qrc
+    ConsoleResources.qrc
 )
 
 # compile
