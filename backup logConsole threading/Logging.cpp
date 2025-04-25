@@ -14,10 +14,10 @@ static bool m_enableFile = true;
 static bool m_enableDebug = true;
 static QMutex mutex;
 
-static Tolmi::Logging::LogConsoleWidget *Console = nullptr;
+static Logging::LogConsoleWidget *Console = nullptr;
 
 
-QString Tolmi::Logging::msgTypeToString(QtMsgType type)
+QString Logging::msgTypeToString(QtMsgType type)
 {
     switch(type)
     {
@@ -33,7 +33,7 @@ QString Tolmi::Logging::msgTypeToString(QtMsgType type)
         return "INFO";
     }
 }
-QtMsgType Tolmi::Logging::StringToMsgType(QString str)
+QtMsgType Logging::StringToMsgType(QString str)
 {
     if(str.contains("INFO", Qt::CaseInsensitive))
         return QtInfoMsg;
@@ -51,7 +51,7 @@ QtMsgType Tolmi::Logging::StringToMsgType(QString str)
  * \brief Функция устанавливаем файл для логирования. Если файл не существует
  * логи в файл не пишутся
  */
-void Tolmi::Logging::setLoggingFile(const QString &filePath)
+void Logging::setLoggingFile(const QString &filePath)
 {
     mutex.lock();
     if(QFile::exists(filePath))
@@ -74,7 +74,7 @@ void Tolmi::Logging::setLoggingFile(const QString &filePath)
 /*!
  * \brief Функция устанавливает разрешение на запись логов в файл
  */
-void Tolmi::Logging::setEnableFileLogging(bool enable)
+void Logging::setEnableFileLogging(bool enable)
 {
     m_enableFile = enable;
 }
@@ -82,7 +82,7 @@ void Tolmi::Logging::setEnableFileLogging(bool enable)
 /*!
  * \brief Функция устанавливает разрешение на отображение логов в консоли
  */
-void Tolmi::Logging::setEnableConsoleLogging(bool enable)
+void Logging::setEnableConsoleLogging(bool enable)
 {
     m_enableConsole = enable;
 }
@@ -90,7 +90,7 @@ void Tolmi::Logging::setEnableConsoleLogging(bool enable)
 /*!
  * \brief Функция устанавливает разрешение на запись/отображение сообщения типа "Debug"
  */
-void Tolmi::Logging::setEnableDebug(bool enable)
+void Logging::setEnableDebug(bool enable)
 {
     m_enableDebug = enable;
 }
@@ -98,13 +98,13 @@ void Tolmi::Logging::setEnableDebug(bool enable)
 /*!
  * \brief Функция логирования для установки в qInstallMessageHandler.
  *  Пример:
-    qInstallMessageHandler(Tolmi::Logging::messageHandler);
-    Tolmi::Logging::setFilePath(logPath);
-    Tolmi::Logging::setEnableFileLogging(true);
-    Tolmi::Logging::setEnableConsoleLogging(true);
-    Tolmi::Logging::setEnableDebug(true);
+    qInstallMessageHandler(Logging::messageHandler);
+    Logging::setFilePath(logPath);
+    Logging::setEnableFileLogging(true);
+    Logging::setEnableConsoleLogging(true);
+    Logging::setEnableDebug(true);
  */
-void Tolmi::Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     //Если отключен вывод дебаг сообщений и приходит дебаг сообщение, то прерываем метод
     if(!m_enableDebug && type == QtDebugMsg) return;
@@ -118,7 +118,7 @@ void Tolmi::Logging::messageHandler(QtMsgType type, const QMessageLogContext &co
 
     //Код ниже является костылем для решения проблемы. Задаваемый ранее паттерн нормально работал
     //только если методы печати вызывались из методов класса находящихся в неймспейсе,
-    //по тиу такого Tolmi::ClassName::MethodName. Если, например, неймспейса
+    //по тиу такого ClassName::MethodName. Если, например, неймспейса
     //не было или печать из свободной функции, то условие rx.indexIn(context.function) != -1
     //не проходило проверку, и ни чего не печаталось в консоль/файл. Поэтому
     //теперь 4 отдельный QRegExp для случаев с 1, 2, 3, 4 вложености. Это наверняка
@@ -180,7 +180,7 @@ void Tolmi::Logging::messageHandler(QtMsgType type, const QMessageLogContext &co
         emit Console->sigAppendFormatedLine(type, date, func, msg);
 }
 
-void Tolmi::Logging::setLogConsole(LogConsoleWidget *c)
+void Logging::setLogConsole(LogConsoleWidget *c)
 {
     Console = c;
 }

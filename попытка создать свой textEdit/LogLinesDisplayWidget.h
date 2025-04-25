@@ -5,7 +5,7 @@
 #include <QWidget>
 #include "LogConsoleWidget.h"
 
-namespace Tolmi::Logging
+namespace Logging
 {
 class LogLinesDisplayWidget : public QAbstractScrollArea
 {
@@ -42,5 +42,5 @@ private:
     void updateScrollBar();
     void calculateVisibleLines();
 };
-}; //Tolmi::Logging
+}; //Logging
 #endif // LOGLINESDISPLAYWIDGET_H

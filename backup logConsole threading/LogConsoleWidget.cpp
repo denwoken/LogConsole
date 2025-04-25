@@ -16,7 +16,7 @@
 #include <QTextEdit>
 #include <iostream>
 #include <QtConcurrent>
-using namespace Tolmi::Logging;
+using namespace Logging;
 const int line_count = 50; // count in block (for history & processing)
 
 

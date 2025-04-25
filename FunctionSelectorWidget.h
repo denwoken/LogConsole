@@ -93,6 +93,6 @@ private:
     void convertTreeWidgetToVector(QVector<QPair<QString, bool>>& parentItem, QString func, QTreeWidgetItem* treeWidgetItem);
 };
 
-};//Tolmi::Logging
+};//Logging
 
 #endif // FUNCTIONSELECTORWIDGET _H

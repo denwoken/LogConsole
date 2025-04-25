@@ -4,7 +4,7 @@
 #include "qdebug.h"
 #include "ui_LogWidgetSettings.h"
 
-using namespace Tolmi::Logging;
+using namespace Logging;
 
 LogWidgetSettings::LogWidgetSettings(LogConsoleWidget *parent):
     ui(new Ui::LogWidgetSettings), QDialog(parent) , m_console(parent)

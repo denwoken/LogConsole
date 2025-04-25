@@ -2,17 +2,21 @@
 #include "LogConsoleWidget.h"
 #include "qboxlayout.h"
 #include "qcheckbox.h"
+#include "qdebug.h"
 #include "qheaderview.h"
 #include "qlineedit.h"
 #include "qmenu.h"
 #include "qpushbutton.h"
 #include "qstandarditemmodel.h"
 #include <QTreeWidget>
+#include <iostream>
+#include <ostream>
 
 using namespace Logging;
 
 FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     QDialog(parent), m_parent(parent) {
+    setProperty("ClassName", "FunctionSelectorWidget");// Регистрируем LogConsoleWidget для Qt Style Sheets
     setMinimumSize(250, 300);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);  // Отключаем рамки и включаем режим Popup
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -119,10 +123,10 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     Hlayout1->addWidget(m_checkAll);
     m_checkAll->setChecked(true);
     m_checkAll->setTristate(true);
-    connect(m_checkAll, &QCheckBox::clicked, [=]() {
+    connect(m_checkAll, &QCheckBox::clicked, [=](bool st) {
         if(m_checkAll->checkState() == Qt::PartiallyChecked) m_checkAll->setCheckState(Qt::Checked);
     });
-    connect(m_checkAll, &QCheckBox::stateChanged, [=]() {
+    connect(m_checkAll, &QCheckBox::stateChanged, [=](int st) {
         updateChildCheckBoxes(m_treeWidget->invisibleRootItem());
     });
 
@@ -237,10 +241,10 @@ QCheckBox* FunctionSelectorWidget::addCheckBoxToItem(QTreeWidgetItem *item)
     // widget->setLayout(layout);
     m_treeWidget->setItemWidget(item, 1, checkbox);
 
-    connect(checkbox, &QCheckBox::clicked, [=]() {
+    connect(checkbox, &QCheckBox::clicked, [=](bool st) {
         if(checkbox->checkState() == Qt::PartiallyChecked) checkbox->setCheckState(Qt::Checked);
     });
-    connect(checkbox, &QCheckBox::stateChanged, [=]() {
+    connect(checkbox, &QCheckBox::stateChanged, [=](int st) {
         updateParentCheckBox(item);
         updateChildCheckBoxes(item);
     });

@@ -4,19 +4,23 @@
 #include "Logging.h"
 #include "qdatetime.h"
 #include "qdebug.h"
+#include "qelapsedtimer.h"
+#include "qevent.h"
 #include "qfileinfo.h"
+#include "qlabel.h"
 #include "qlocale.h"
+#include "qscreen.h"
 #include "qscrollbar.h"
 #include "qsettings.h"
-#include "qevent.h"
 #include "qstandarditemmodel.h"
+#include "qstyle.h"
 #include "qtextdocumentfragment.h"
 #include "ui_logconsolewidget.h"
 #include <QWidget>
 #include <QTextEdit>
+#include <iostream>
 #include <QtConcurrent>
-#include <QScreen>
-
+#include <qdockwidget.h>
 using namespace Logging;
 const int line_count = 50; // count in block (for history & processing)
 
@@ -328,8 +332,10 @@ bool ConsoleFormatter::isFunctionChecked(const QString &func)
 
 
 
-LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui::LogConsoleWidget)
+LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
+    QWidget(parent, f), ui(new Ui::LogConsoleWidget)
 {
+    setProperty("ClassName", "LogConsoleWidget");// Регистрируем LogConsoleWidget для Qt Style Sheets
     qRegisterMetaType<QTextCursor>("QTextCursor");
     qRegisterMetaType<QTextFormat>("QTextCharFormat");
     qRegisterMetaType<QtMsgType>("QtMsgType");
@@ -359,7 +365,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
 
     m_settings.colors.infoMessage = QColor(0, 0xe6, 0x73);        //"#0000ff"
     m_settings.colors.warningMessage = QColor(0xff, 0xff, 0x3c);  //"#ffaa00"
-    m_settings.colors.debugMessage = QColor(0x20, 0x20, 0x20);          //0xc8, 0xc8, 0xc8
+    m_settings.colors.debugMessage = QColor(0xc8, 0xc8, 0xc8);          //"#000000"
     m_settings.colors.fatalMessage = QColor(0xff, 0, 0);       //"#ff0000"
     m_settings.colors.criticalMessage = QColor(0xff, 0x4b, 0x4b);    //"#ff0000"
 
@@ -385,15 +391,25 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
     });
 
     connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, [this](bool onTop) {
+
+        QWidget* parent = this;
+        if(parent->parentWidget() != nullptr)
+            parent = parent->parentWidget();
+
         // Устанавливаем флаг поверх всех окон
-        bool isHidden = this->isHidden();
-        setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
-        if(!isHidden) show();
+        bool isHidden = parent->isHidden();
+        parent->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        if(!isHidden) parent->show();
     });
     connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, [this](bool hideTitle) {
+        QWidget* parent = this;
+        if(parent->parentWidget() != nullptr)
+            parent = parent->parentWidget();
+
         // Устанавливаем флаг скрытия заголовка окна
-        setWindowFlag(Qt::FramelessWindowHint, hideTitle);
-        QPoint point = this->pos();
+        bool isHidden = parent->isHidden();
+        parent->setWindowFlag(Qt::FramelessWindowHint, hideTitle);
+        QPoint point = parent->pos();
         if(hideTitle){
             point.rx() += 8;
             point.ry() += 31;
@@ -402,9 +418,8 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent) : QWidget(parent), ui(new Ui
             point.rx() -= 8;
             point.ry() -= 31;
         }
-        this->move(point);
-        bool isHidden = this->isHidden();
-        if(!isHidden) this->show();
+        parent->move(point);
+        if(!isHidden) parent->show();
     });
 
 
@@ -866,20 +881,30 @@ void LogConsoleWidget::insertFrontDocumentFragment(const QTextDocumentFragment &
 }
 
 void LogConsoleWidget::mousePressEvent(QMouseEvent *event) {
+    QWidget* parent = this;
+    if(parent->parentWidget() != nullptr)
+        parent = parent->parentWidget();
+
     // Проверяем, что клик произошел на области заголовка
     if ((event->button() & Qt::LeftButton) &&
         ui->horizontalSpacer->geometry().contains(event->pos())) {
         m_dragging = true;
-        m_dragPosition = event->globalPos() - frameGeometry().topLeft();
+        m_dragPosition = event->globalPos() - parent->frameGeometry().topLeft();
         event->accept();
     }
     QWidget::mousePressEvent(event);
 }
 
 void LogConsoleWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (m_dragging && (event->buttons() & Qt::LeftButton)) {
-        move(event->globalPos() - m_dragPosition);
-        event->accept();
+    QWidget* parent = this;
+    if(parent->parentWidget() != nullptr)
+        parent = parent->parentWidget();
+    QDockWidget* dock = dynamic_cast<QDockWidget*>(parent);
+    if(     !(dock && !dock->isFloating())     ){
+        if (m_dragging && (event->buttons() & Qt::LeftButton)) {
+            parent->move(event->globalPos() - m_dragPosition);
+            event->accept();
+        }
     }
     QWidget::mouseMoveEvent(event);
 }

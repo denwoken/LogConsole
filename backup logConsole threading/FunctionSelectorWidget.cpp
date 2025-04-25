@@ -12,7 +12,7 @@
 #include <iostream>
 #include <ostream>
 
-using namespace Tolmi::Logging;
+using namespace Logging;
 
 FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     QDialog(parent), m_parent(parent) {

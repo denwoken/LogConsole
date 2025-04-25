@@ -2,6 +2,7 @@
 #define LOGWIDGETSETTINGS_H
 
 #include "qdialog.h"
+#include "qpushbutton.h"
 #include <QWidget>
 #include <QMap>
 
@@ -9,8 +10,6 @@ namespace Ui {
 class LogWidgetSettings;
 }
 
-class QColorDialog;
-class QPushButton;
 class QColorDialog;
 namespace Logging
 {
@@ -56,5 +55,5 @@ private:
     QColorDialog *m_colorDialog;
 };
 
-};//namespace Tolmi::Logging
+};//namespace Logging
 #endif // LOGWIDGETSETTINGS_H

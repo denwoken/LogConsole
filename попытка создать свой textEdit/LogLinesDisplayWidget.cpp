@@ -10,7 +10,7 @@
 #include <iostream>
 #include <ostream>
 
-using namespace Tolmi::Logging;
+using namespace Logging;
 void LogLinesDisplayWidget::paintEvent(QPaintEvent *event)
 {
     QElapsedTimer timer;

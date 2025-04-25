@@ -11,7 +11,7 @@
 
 /*! ConsoleFormatter example
  *
-    using namespace Tolmi::Logging
+    using namespace Logging
     setLoggingFile("C:/Users/denwoken/Desktop/logFile.log");
     setEnableFileLogging(true);
     setEnableConsoleLogging(true);
@@ -49,7 +49,7 @@ class QStandardItemModel;
 class QTextDocument;
 Q_DECLARE_METATYPE(QTextDocumentFragment);
 
-namespace Tolmi::Logging
+namespace Logging
 {
 
 class LogConsoleWidget;
@@ -261,6 +261,6 @@ private:
 
 
 
-};  // namespace Tolmi::Logging
+};  // namespace Logging
 
 #endif  // LOGCONSOLEWIDGET_H

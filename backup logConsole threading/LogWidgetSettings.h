@@ -11,7 +11,7 @@ class LogWidgetSettings;
 }
 
 class QColorDialog;
-namespace Tolmi::Logging
+namespace Logging
 {
 
 
@@ -55,5 +55,5 @@ private:
     QColorDialog *m_colorDialog;
 };
 
-};//namespace Tolmi::Logging
+};//namespace Logging
 #endif // LOGWIDGETSETTINGS_H

@@ -181,14 +181,13 @@ Logging::LogConsoleWidget* Logging::getLogConsole()
     return Console;
 }
 
-
-Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
+Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowFlags f)
 {
     setEnableFileLogging(true);
     setEnableConsoleLogging(true);
     setEnableDebug(true);
     qInstallMessageHandler(messageHandler);
-    LogConsoleWidget *Console = new LogConsoleWidget(parent);
+    LogConsoleWidget *Console = new LogConsoleWidget(parent, f);
     setLogConsole(Console);
     QObject::connect(Console, &Logging::LogConsoleWidget::destroyed, [Console](){
         if(Console == Logging::getLogConsole())
@@ -204,16 +203,7 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
     Console->setLogFilePath(logDir.absoluteFilePath(logFileName));
     setLoggingFile(Console->getLogFilePath());
 
-/*
-    if(parent == nullptr){
-        // установка SteleSheets
-        QFile f(":/Console/resources/StyleSheetTolmi1.qss");
-        f.open(QFile::ReadOnly);
-        QString style = f.readAll();
-        f.close();
-        Console->setStyleSheet(style + "QWidget { background-color: rgb(32,32,32); }");
-    }
-*/
+
     //загрузка настроек
     QString defSettings(logDir.absoluteFilePath("ConsoleDefaultSettings.ini"));
     if(QFileInfo::exists(defSettings))
@@ -227,4 +217,3 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent)
 
     return Console;
 }
-

@@ -6,10 +6,11 @@
 #include <qdebug.h>
 class QWidget;
 
+
 /*!
  *  Quick get started example
 
-    using namespace Tolmi::Logging;
+    using namespace Logging;
     LogConsoleWidget* console = quickNewConsole();
     console->show();
  */
@@ -26,11 +27,9 @@ void setLogConsole(LogConsoleWidget *Console);
 LogConsoleWidget* getLogConsole();
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
-LogConsoleWidget* quickNewConsole(QWidget* parent = nullptr);
+LogConsoleWidget* quickNewConsole(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
-
-}
-
+}  // namespace Logging
 
 
 #endif // LOGGING_H

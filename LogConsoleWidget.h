@@ -11,7 +11,7 @@
 
 /*! ConsoleFormatter example
  *
-    using namespace Tolmi::Logging;
+    using namespace Logging;
 
     QDir logDir = QDir::currentPath();
     if(!logDir.exists("logs")) logDir.mkdir("logs"); // создаем папку logs если ее нет
@@ -63,7 +63,6 @@ QT_END_NAMESPACE
 
 class QStandardItemModel;
 class QTextDocument;
-class QTextCursor;
 namespace Logging
 {
 
@@ -177,7 +176,7 @@ class LogConsoleWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit LogConsoleWidget(QWidget *parent = nullptr);
+    explicit LogConsoleWidget(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~LogConsoleWidget();
     /*!
      * \brief saveSettings сохраняет настройки консоли в файл
