@@ -644,6 +644,7 @@ bool LogConsoleWidget::loadSettings(QString path)
         bool st = saving.value(keyName).toBool();
         m_FuncSelector->addFunction(keyName);
         m_FuncSelector->setCheckStateFunction(keyName, st);
+        qDebug() << keyName << st;
     }
     saving.endGroup();
 
