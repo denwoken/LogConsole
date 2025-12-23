@@ -19,7 +19,7 @@ HEADERS += \
     $$PWD/LogConsoleWidget.h \
     $$PWD/LogWidgetSettings.h \
     $$PWD/Logging.h	\
-		LoggingEncoder.h
+    $$PWD/LoggingEncoder.h
 
 RESOURCES += \
     $$PWD/ConsoleResources.qrc
