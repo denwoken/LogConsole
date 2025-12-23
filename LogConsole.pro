@@ -38,4 +38,5 @@ RESOURCES += \
 
 DISTFILES += \
     CMakeLists.txt \
-    LogConsole.pri
+    LogConsole.pri \
+    README.md
