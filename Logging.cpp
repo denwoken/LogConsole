@@ -238,7 +238,7 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowF
         f.open(QFile::ReadOnly);
         QString style = f.readAll();
         f.close();
-        //Console->setStyleSheet(style);
+        Console->setStyleSheet(style);
     }
 
     //загрузка настроек
