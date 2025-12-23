@@ -18,10 +18,11 @@ HEADERS += \
     $$PWD/FunctionSelectorWidget.h \
     $$PWD/LogConsoleWidget.h \
     $$PWD/LogWidgetSettings.h \
-    $$PWD/Logging.h
+    $$PWD/Logging.h	\
+		LoggingEncoder.h
 
 RESOURCES += \
-    $$PWD/resources.qrc
+    $$PWD/ConsoleResources.qrc
 
 
 

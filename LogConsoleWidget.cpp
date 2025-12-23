@@ -2,12 +2,11 @@
 #include "FunctionSelectorWidget.h"
 #include "LogWidgetSettings.h"
 #include "Logging.h"
+#include "LoggingEncoder.h"
 #include "qdatetime.h"
 #include "qdebug.h"
-#include "qelapsedtimer.h"
 #include "qevent.h"
 #include "qfileinfo.h"
-#include "qlabel.h"
 #include "qlocale.h"
 #include "qscreen.h"
 #include "qscrollbar.h"
@@ -18,10 +17,9 @@
 #include "ui_logconsolewidget.h"
 #include <QWidget>
 #include <QTextEdit>
-#include <iostream>
 #include <QtConcurrent>
-#include <qdockwidget.h>
 using namespace Logging;
+#include <qdockwidget.h>
 const int line_count = 50; // count in block (for history & processing)
 
 //загрука ресурсов (при загрузке статической )
@@ -56,7 +54,21 @@ QPair<QVector<LogLine>, QStringList> ConsoleFormatter::stringList2LogLines(const
 
     for(const QString& line : block){
         if(line.isEmpty()) continue;
-        LogLine logLine(line);
+        LogLine logLine;
+
+        QString decodedLine;
+        bool success = Logging::Encoder::decodeLineString(line, decodedLine);
+        if(success && decodedLine.size()){
+            logLine = LogLine(decodedLine);
+        } else {
+            logLine = LogLine(line);
+        }
+        //parse or decoding Error
+        if(logLine.only_message){
+            logLine.type = QtWarningMsg;
+            logLine.message = "LogLine decoding Error: " + logLine.message;
+        }
+
         functions.append(logLine.functionStr);
         logLines.append(logLine);
     }
@@ -377,7 +389,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
     m_formatter = new ConsoleFormatter(this);
 
     //подключаем кнопку к включению и отключению LineWrapMode
-    connect(ui->checkBox_lineWrap, &QCheckBox::stateChanged, [=](bool wrap) {
+    connect(ui->checkBox_lineWrap, &QCheckBox::stateChanged, this, [=](bool wrap) {
         if(wrap)
         {
             //ui->textEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -390,7 +402,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
         }
     });
 
-    connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, [this](bool onTop) {
+    connect(ui->checkBoxOnTopHint, &QCheckBox::stateChanged, this, [this](bool onTop) {
 
         QWidget* parent = this;
         if(parent->parentWidget() != nullptr)
@@ -401,7 +413,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
         parent->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
         if(!isHidden) parent->show();
     });
-    connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, [this](bool hideTitle) {
+    connect(ui->checkBoxHideTitle, &QCheckBox::stateChanged, this, [this](bool hideTitle) {
         QWidget* parent = this;
         if(parent->parentWidget() != nullptr)
             parent = parent->parentWidget();
@@ -426,7 +438,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
 
 
     //подключаем кнопку очистки консоли к очистке истории и textEdit
-    connect(ui->pushButton_clear, &QPushButton::clicked, [&](){
+    connect(ui->pushButton_clear, &QPushButton::clicked, this, [&](){
         QMutexLocker locker(&m_mutex);
         ui->textEdit->clear();
         m_history.clear();
@@ -435,7 +447,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
 
 
     // Подключаем кнопку к окрытию диалога настроек
-    connect(ui->settingsButton, &QPushButton::clicked, [&]() {
+    connect(ui->settingsButton, &QPushButton::clicked, this, [&]() {
         LogWidgetSettings *optWidget = new LogWidgetSettings(this);
         QPoint pos = ui->settingsButton->mapToGlobal(QPoint(-this->width(), ui->settingsButton->height()));
         optWidget->move(pos);
@@ -467,7 +479,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
     m_FuncSelector->resize(300, 350);
 
     // Подключаем кнопку к открытию меню правил сортировки (FunctionSelectorWidget)
-    connect(ui->FilterButton, &QPushButton::clicked, [=]() {
+    connect(ui->FilterButton, &QPushButton::clicked, this, [=]() {
         QPoint pos = QPoint(1+ui->FilterButton->width() - m_FuncSelector->width(), ui->FilterButton->height());
         pos = ui->FilterButton->mapToGlobal(pos);
         m_FuncSelector->move(pos);
@@ -478,7 +490,7 @@ LogConsoleWidget::LogConsoleWidget(QWidget *parent, Qt::WindowFlags f) :
         ui->pushButton_GoDown->click();
     });
     //подключаем кнопку прокрутки консоли в самый низ
-    connect(ui->pushButton_GoDown, &QPushButton::clicked, [=]() {
+    connect(ui->pushButton_GoDown, &QPushButton::clicked, this, [=]() {
         QScrollBar* scroll = ui->textEdit->verticalScrollBar();
         scroll->setValue(scroll->maximum());
     });
@@ -554,7 +566,7 @@ bool LogConsoleWidget::saveSettings(QString path)
 
     saving.beginGroup("FunctionFilter");
     QVector<QPair<QString, bool>> vector = m_FuncSelector->convertToVector();
-    for(auto pair : vector)
+    for(const auto &pair : std::as_const(vector))
         saving.setValue(pair.first, QVariant((bool)pair.second));
     saving.endGroup();
 
@@ -639,7 +651,7 @@ bool LogConsoleWidget::loadSettings(QString path)
 
     saving.beginGroup("FunctionFilter");
     QStringList list = saving.childKeys();
-    for(auto keyName : list){
+    for(const auto &keyName : std::as_const(list)){
         if(keyName.isEmpty())continue;
         bool st = saving.value(keyName).toBool();
         m_FuncSelector->addFunction(keyName);
@@ -722,7 +734,7 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
         {
             //timer.restart();
             QStringList Functions;
-            for(auto stringBlock : stringListBlocks){
+            for(const auto &stringBlock : std::as_const(stringListBlocks)){
                 auto pair = m_formatter->stringList2LogLines(stringBlock);
                 Blocks.append(std::move(pair.first));
                 Functions.append(std::move(pair.second));
@@ -731,7 +743,7 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
             //std::cout << "translate stringList to LogLines " << t1/1000 << " ms;"<< std::endl;
 
             //timer.restart();
-            for(auto func : Functions)
+            for(const auto &func : Functions)
                 m_FuncSelector->addFunction(func);
             //t2 = timer.nsecsElapsed()/1000;
             //std::cout << "add Functions to selector " << t2/1000 << " ms;"<< std::endl;
@@ -739,8 +751,8 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
 
         //добавляем строки в историю
         //timer.restart();
-        for(auto block : Blocks)
-            for(auto line : block)
+        for(const auto &block : Blocks)
+            for(const auto &line : block)
                 m_history.append(line);
         //float t3 = timer.nsecsElapsed()/1000;
         //std::cout << "add LogLines to history " << t3/1000 << " ms;"<< std::endl;
@@ -748,7 +760,7 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
         QList<QTextDocumentFragment> docFragments;
         //timer.restart();
         //преобразование блоков текста в документ
-        for(auto block : Blocks){
+        for(const auto &block : Blocks){
             QTextDocument* doc = m_formatter->formatBlockToDoc(block);
             QTextDocumentFragment fr(doc);
             docFragments.append(std::move(fr));
@@ -761,7 +773,7 @@ bool LogConsoleWidget::loadLogsHistory(QString path)
 
         //timer.restart();
         //добавление документов
-        for(auto fragment : docFragments){
+        for(const auto &fragment : docFragments){
             appendDocumentFragment(fragment);
         }
         //float t5 = timer.nsecsElapsed()/1000;
@@ -951,7 +963,7 @@ void LogConsoleWidget::updateContent()
         delete m_settings.functions;
     m_settings.functions = mod;
 
-    for(auto block : blocks){
+    for(const auto &block : std::as_const(blocks)){
         QTextDocument* doc = m_formatter->formatBlockToDoc(block);
         QTextDocumentFragment fr(doc);
         //docFragments.append(std::move(fr));
@@ -965,6 +977,7 @@ void LogConsoleWidget::updateContent()
 
 LogLine::LogLine(const QString &line){
     if(line.isEmpty()) return;
+
     int msgSepIndex = line.indexOf(" >> ");  // промт разделяющий сообщение и информацию
     if(msgSepIndex == -1){
         message = line;

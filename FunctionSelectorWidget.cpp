@@ -2,21 +2,19 @@
 #include "LogConsoleWidget.h"
 #include "qboxlayout.h"
 #include "qcheckbox.h"
-#include "qdebug.h"
 #include "qheaderview.h"
 #include "qlineedit.h"
 #include "qmenu.h"
 #include "qpushbutton.h"
 #include "qstandarditemmodel.h"
 #include <QTreeWidget>
-#include <iostream>
-#include <ostream>
 
 using namespace Logging;
 
 FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     QDialog(parent), m_parent(parent) {
     setProperty("ClassName", "FunctionSelectorWidget");// Регистрируем LogConsoleWidget для Qt Style Sheets
+    setStyleSheet(parent->styleSheet());
     setMinimumSize(250, 300);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);  // Отключаем рамки и включаем режим Popup
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -49,7 +47,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     if(m_parent)
         action1->setChecked(m_parent->m_settings.enableLogMsgs.infoMsg);
     m_logLevelMenu->addAction(action1);
-    connect(action1, &QAction::toggled, [&](bool state){
+    connect(action1, &QAction::toggled, this, [&](bool state){
         if(m_parent)
             m_parent->m_settings.enableLogMsgs.infoMsg = state;
     });
@@ -59,7 +57,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     if(m_parent)
         action2->setChecked(m_parent->m_settings.enableLogMsgs.debugMsg);
     m_logLevelMenu->addAction(action2);
-    connect(action2, &QAction::toggled, [&](bool state){
+    connect(action2, &QAction::toggled, this, [&](bool state){
         if(m_parent)
             m_parent->m_settings.enableLogMsgs.debugMsg = state;
     });
@@ -69,7 +67,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     if(m_parent)
         action3->setChecked(m_parent->m_settings.enableLogMsgs.warningMsg);
     m_logLevelMenu->addAction(action3);
-    connect(action3, &QAction::toggled, [&](bool state){
+    connect(action3, &QAction::toggled, this, [&](bool state){
         if(m_parent)
             m_parent->m_settings.enableLogMsgs.warningMsg = state;
     });
@@ -79,7 +77,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     if(m_parent)
         action4->setChecked(m_parent->m_settings.enableLogMsgs.criticalMsg);
     m_logLevelMenu->addAction(action4);
-    connect(action4, &QAction::toggled, [&](bool state){
+    connect(action4, &QAction::toggled, this, [&](bool state){
         if(m_parent)
             m_parent->m_settings.enableLogMsgs.criticalMsg = state;
     });
@@ -89,7 +87,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     if(m_parent)
         action5->setChecked(m_parent->m_settings.enableLogMsgs.fatalMsg);
     m_logLevelMenu->addAction(action5);
-    connect(action5, &QAction::toggled, [&](bool state){
+    connect(action5, &QAction::toggled, this, [&](bool state){
         if(m_parent)
             m_parent->m_settings.enableLogMsgs.fatalMsg = state;
     });
@@ -97,7 +95,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
 
 
     // Подключаем кнопку к открытию подменю включения уровня логирования
-    connect(m_logLevelButton, &QPushButton::clicked, [&]() {
+    connect(m_logLevelButton, &QPushButton::clicked, this, [&]() {
         QPoint pos = QPoint(1 + m_logLevelButton->width() - m_logLevelMenu->width(), m_logLevelButton->height());
         pos = m_logLevelButton->mapToGlobal(pos);
         m_logLevelMenu->move(pos);
@@ -121,14 +119,6 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     m_checkAll = addCheckBoxToItem(m_treeWidget->invisibleRootItem());
     m_checkAll->setText("Отметить все");
     Hlayout1->addWidget(m_checkAll);
-    m_checkAll->setChecked(true);
-    m_checkAll->setTristate(true);
-    connect(m_checkAll, &QCheckBox::clicked, [=](bool st) {
-        if(m_checkAll->checkState() == Qt::PartiallyChecked) m_checkAll->setCheckState(Qt::Checked);
-    });
-    connect(m_checkAll, &QCheckBox::stateChanged, [=](int st) {
-        updateChildCheckBoxes(m_treeWidget->invisibleRootItem());
-    });
 
 
 
@@ -144,7 +134,7 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     m_addButton = new QPushButton(this);
     m_addButton->setFixedSize(24, 24);
     m_addButton->setIcon(QIcon(":/Console/resources/plus_icon.png"));
-    connect(m_addButton, &QPushButton::clicked, [&](){
+    connect(m_addButton, &QPushButton::clicked, this,[&](){
         this->addFunction(m_addField->text());
         sortItems();
     });
@@ -154,9 +144,9 @@ FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     m_removeButton = new QPushButton(this);
     m_removeButton->setFixedSize(24, 24);
     m_removeButton->setIcon(QIcon(":/Console/resources/minus_icon.png"));
-    connect(m_removeButton, &QPushButton::clicked, [&](){
+    connect(m_removeButton, &QPushButton::clicked, this, [&](){
         QList<QTreeWidgetItem*> items = m_treeWidget->selectedItems();
-        for(QTreeWidgetItem* item : items){
+        for(QTreeWidgetItem* item : std::as_const(items)){
             this->removeItem(item);
         }
     });
@@ -186,23 +176,22 @@ void FunctionSelectorWidget::addFunction(const QString &path)
 void FunctionSelectorWidget::setCheckStateFunction(const QString &path, bool st)
 {
     QStringList parts = path.split("::");
-    if(parts.size() < 0) return;
+    if(parts.isEmpty()) return;
 
     QTreeWidgetItem *item = m_treeWidget->invisibleRootItem();
     for(int i = 0; i < parts.size(); i++)
     {
         QTreeWidgetItem *child = nullptr;
-        int childNumLast = item->childCount()-1;
-        for(int j = 0; j <= childNumLast; j++)
+        for(int j = 0; j < item->childCount(); j++)
         {
             child = item->child(j);
-            if(!child)continue;
             if(child->text(0) == parts[i]){
                 item = child;
-                if(j == childNumLast){
-                    QCheckBox *checkBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(child, 1));
+                if(i == parts.size()-1){
+                    QCheckBox *checkBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(child, 1));
                     if(checkBox)
                         checkBox->setChecked(st);
+                    return;
                 }
                 continue;
             }
@@ -230,31 +219,28 @@ QTreeWidgetItem *FunctionSelectorWidget::findOrCreateItem(QTreeWidgetItem *paren
 // Метод для добавления CheckBox в элемент дерева
 QCheckBox* FunctionSelectorWidget::addCheckBoxToItem(QTreeWidgetItem *item)
 {
-    // QWidget* widget = new QWidget();
-    // QHBoxLayout* layout = new QHBoxLayout(widget);
     QCheckBox *checkbox = new QCheckBox();
     checkbox->setChecked(true);
     checkbox->setTristate(false);
-    // layout->addWidget(checkbox);
-    // layout->setAlignment(Qt::AlignLeft);
-    // layout->setContentsMargins(1, 1, 1, 1);
-    // widget->setLayout(layout);
     m_treeWidget->setItemWidget(item, 1, checkbox);
+    if(m_treeWidget->invisibleRootItem() == item) m_checkAll = checkbox;
 
     connect(checkbox, &QCheckBox::clicked, [=](bool st) {
         if(checkbox->checkState() == Qt::PartiallyChecked) checkbox->setCheckState(Qt::Checked);
     });
-    connect(checkbox, &QCheckBox::stateChanged, [=](int st) {
+    connect(checkbox, &QCheckBox::stateChanged, this, [this, item](int st) {
         updateParentCheckBox(item);
         updateChildCheckBoxes(item);
     });
+    updateParentCheckBox(item);
+    updateChildCheckBoxes(item);
     return checkbox;
 }
 
 void FunctionSelectorWidget::updateChildCheckBoxes(QTreeWidgetItem *item)
 {
     if(!item) return;
-    QCheckBox *checkBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(item, 1));
+    QCheckBox *checkBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(item, 1));
     if(m_treeWidget->invisibleRootItem() == item)
         checkBox = m_checkAll;
     if(!checkBox)return;
@@ -263,7 +249,7 @@ void FunctionSelectorWidget::updateChildCheckBoxes(QTreeWidgetItem *item)
     if(state == Qt::PartiallyChecked) return;
     for(int i = 0; i < item->childCount(); i++)
     {
-        QCheckBox *childCheckBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(item->child(i), 1));
+        QCheckBox *childCheckBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(item->child(i), 1));
         if(childCheckBox) childCheckBox->setCheckState(state);
     }
 }
@@ -290,7 +276,7 @@ void FunctionSelectorWidget::updateParentCheckBox(QTreeWidgetItem *item)
     bool anyChecked = false;
     for(int i = 0; i < parent->childCount(); i++)
     {
-        QCheckBox *childCheckBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(parent->child(i), 1));
+        QCheckBox *childCheckBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(parent->child(i), 1));
         if(childCheckBox)
         {
             Qt::CheckState state = childCheckBox->checkState();
@@ -299,7 +285,7 @@ void FunctionSelectorWidget::updateParentCheckBox(QTreeWidgetItem *item)
         }
     }
 
-    QCheckBox *parentCheckbox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(parent, 1));
+    QCheckBox *parentCheckbox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(parent, 1));
     if(parent == m_treeWidget->invisibleRootItem()){
         parentCheckbox = m_checkAll;
     }
@@ -362,7 +348,7 @@ void FunctionSelectorWidget::convertTreeWidgetToStandardItemModel(QStandardItem 
     {
         QTreeWidgetItem *childTreeItem = treeWidgetItem->child(i);
 
-        QCheckBox *checkBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(childTreeItem, 1));
+        QCheckBox *checkBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(childTreeItem, 1));
 
         if(checkBox)
         {
@@ -396,7 +382,7 @@ void FunctionSelectorWidget::convertTreeWidgetToVector(QVector<QPair<QString, bo
         }
         else
         {
-            QCheckBox *checkBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(childTreeItem, 1));
+            QCheckBox *checkBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(childTreeItem, 1));
             if(checkBox)
             {
                 QPair<QString, bool> pair;
@@ -422,7 +408,7 @@ QStandardItemModel *FunctionSelectorWidget::convertToStandardItemModel()
     {
         QTreeWidgetItem *topLevelItem = m_treeWidget->topLevelItem(i);
 
-        QCheckBox *checkbox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(topLevelItem, 1));
+        QCheckBox *checkbox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(topLevelItem, 1));
 
         if(checkbox)
         {
@@ -458,7 +444,7 @@ QVector<QPair<QString, bool>> FunctionSelectorWidget::convertToVector()
         }
         else
         {
-            QCheckBox *checkBox = dynamic_cast<QCheckBox *>(m_treeWidget->itemWidget(topLevelItem, 1));
+            QCheckBox *checkBox = qobject_cast<QCheckBox *>(m_treeWidget->itemWidget(topLevelItem, 1));
             if(checkBox)
             {
                 QPair<QString, bool> pair;

@@ -17,12 +17,14 @@ class QWidget;
 namespace Logging
 {
 class LogConsoleWidget;
-QString msgTypeToString(QtMsgType type);
-QtMsgType StringToMsgType(QString str);
+QString msgTypeToString(const QtMsgType type) ;
+QtMsgType StringToMsgType(const QString& str) ;
+
 void setLoggingFile(const QString &filePath);
 void setEnableFileLogging(bool enable);
 void setEnableConsoleLogging(bool enable);
 void setEnableDebug(bool enable);
+void setEnableFileEncoding(bool enable);
 void setLogConsole(LogConsoleWidget *Console);
 LogConsoleWidget* getLogConsole();
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);

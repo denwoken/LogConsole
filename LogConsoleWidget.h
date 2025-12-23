@@ -7,7 +7,7 @@
 #include "qmutex.h"
 #include "qtextcursor.h"
 #include <QWidget>
-
+#include "Logging.h"
 
 /*! ConsoleFormatter example
  *
@@ -129,6 +129,13 @@ public:
             const QString& func, const QString msg):
         dateTime(date), type(logLevel), functionStr(func), message(msg){};
     ~LogLine(){};
+    inline QString toQString(){
+        if(only_message) return message;
+        QString timeDateStr = dateTime.toString("yyyy-MM-dd hh:mm:ss.zzz");
+        return QString("%1 %2 %3 >> %4")
+            .arg(timeDateStr, msgTypeToString(type), functionStr, message);
+    }
+
     QDateTime dateTime;
     QtMsgType type;
     QString functionStr;
@@ -195,14 +202,17 @@ public:
     /*!
      * \brief getLogFilePath геттер для получения пути до файла в котором храняться логи.
      */
-    QString getLogFilePath();;
+    QString getLogFilePath();
     /*!
      * \brief setLogFilePath устанавливает путь до файла с логами, но не загружает историю логов!
      *  loadLogsHistory(..) загружает историю и устанавливает setLogFilePath(..)
      *  Даная функция по факту является не нужной тк класс не пишет логи в файл сам..
      */
-    void setLogFilePath(const QString& path);;
+    void setLogFilePath(const QString& path);
 
+    QString getConsoleSettingsPath(){
+        return m_settingsFilePath;
+    }
 
     /*!
      * \brief appendFormatedLine добавляет строку в виджет с заданным шаблоном.

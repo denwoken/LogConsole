@@ -4,28 +4,29 @@
 #include <QDateTime>
 #include <QFile>
 #include <QMutex>
-#include <qapplication.h>
-#include <qthread.h>
 #include "LogConsoleWidget.h"
+#include "qcoreapplication.h"
 #include "qdebug.h"
 #include "qdir.h"
+#include "LoggingEncoder.h"
+#include "qthread.h"
+
+static QMutex mutex; // только для защиты QFile
+static QScopedPointer<QFile> m_logFile;
+
+static std::atomic_bool m_fileExist = false;
+static std::atomic_bool m_enableConsole = true;
+static std::atomic_bool m_enableFile = true;
+static std::atomic_bool m_enableDebug = true;
+static std::atomic_bool m_enableFileEncoding = true;
 
 
-namespace Logging
-{
-    static QScopedPointer<QFile> m_logFile;
-    static bool m_fileExist = false;
-    static bool m_enableConsole = true;
-    static bool m_enableFile = true;
-    static bool m_enableDebug = true;
-    static QMutex mutex;
-    static LogConsoleWidget *Console;
-};
 
 
+static std::atomic<Logging::LogConsoleWidget*> m_consoleInstance = nullptr;
 
 
-QString Logging::msgTypeToString(QtMsgType type)
+QString Logging::msgTypeToString(const QtMsgType type)
 {
     switch(type)
     {
@@ -39,11 +40,10 @@ QString Logging::msgTypeToString(QtMsgType type)
         return "FATAL";
     case QtInfoMsg:
         return "INFO";
-    default:
-        return "";
     }
+    return "";
 }
-QtMsgType Logging::StringToMsgType(QString str)
+QtMsgType Logging::StringToMsgType(const QString& str)
 {
     if(str.contains("INFO", Qt::CaseInsensitive))
         return QtInfoMsg;
@@ -55,8 +55,9 @@ QtMsgType Logging::StringToMsgType(QString str)
         return QtCriticalMsg;
     else if(str.contains("FATAL", Qt::CaseInsensitive))
         return QtFatalMsg;
-    return QtFatalMsg;
+    return QtDebugMsg;
 }
+
 
 /*!
  * \brief Функция устанавливаем файл для логирования. Если файл не существует
@@ -64,13 +65,16 @@ QtMsgType Logging::StringToMsgType(QString str)
  */
 void Logging::setLoggingFile(const QString &filePath)
 {
-    mutex.lock();
+
     if(QFile::exists(filePath))
     {
+        QMutexLocker locker(&mutex);
         // Устанавливаем файл логирования
         m_logFile.reset(new QFile(filePath));
         // Открываем файл логирования
         m_logFile.data()->open(QFile::Append | QFile::Text);
+        if(!m_logFile->isOpen())
+            qCritical() << "Could not open log file for writing";
         //Выставляе флаг разрешения
         m_fileExist = true;
     }
@@ -78,8 +82,6 @@ void Logging::setLoggingFile(const QString &filePath)
     {
         m_fileExist = false;
     }
-
-    mutex.unlock();
 }
 
 /*!
@@ -106,6 +108,15 @@ void Logging::setEnableDebug(bool enable)
     m_enableDebug = enable;
 }
 
+
+/*!
+ * \brief Logging::setEnableFileEncoding Включает или отключает кодрование логов в файле
+ */
+void Logging::setEnableFileEncoding(bool enable)
+{
+    m_enableFileEncoding = enable;
+}
+
 /*!
  * \brief Функция логирования для установки в qInstallMessageHandler.
  *  Пример:
@@ -122,9 +133,8 @@ void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, 
 
     //Записываем дату и время
     QDateTime date = QDateTime::currentDateTime();
-    QString timeDateStr = date.toString("yyyy-MM-dd hh:mm:ss.zzz");
-    //По типу определяем, к какому уровню относится сообщение
-    QString typeMsg = msgTypeToString(type);
+    //QString timeDateStr = date.toString("yyyy-MM-dd hh:mm:ss.zzz");
+
 
 
     // Ищем подстроку, которая начинается с последнего пробела
@@ -138,47 +148,64 @@ void Logging::messageHandler(QtMsgType type, const QMessageLogContext &context, 
 
 
     QString str;
-    str = QString("%1 %2 %3 >> %4").arg(timeDateStr).arg(typeMsg).arg(func).arg(msg);
-
+    //По типу определяем, к какому уровню относится сообщение
+    // QString typeMsg = msgTypeToString(type);
+    // str = QString("%1 %2 %3 >> %4").arg(timeDateStr, typeMsg, func, msg);
+    //LogLine(type, date, func, msg);
+    str = LogLine(type, date, func, msg).toQString();
+    QString encodedStr;
+    if(m_enableFileEncoding && m_fileExist && m_enableFile)
+    {
+        encodedStr = Logging::Encoder::encodeLineString(str);
+    }
 
     //В зависимости от установленных флагов выводим сообщение
     //в консоль и пишем в файл
-    mutex.lock();
-    if(m_enableConsole)
     {
-        QTextStream out(stdout);
-        out << str << '\n';
-        //std::cout << str.toStdString() << std::endl;
+        QMutexLocker locker(&mutex);
+        if(m_enableConsole)
+        {
+            QTextStream out(stdout);
+            out << str << '\n';
+            //std::cout << str.toStdString() << std::endl;
+            out.flush();
+            if (out.status() != QTextStream::Ok) {
+                qCritical() << "Console write error!";
+            }
+        }
+        if(m_fileExist && m_enableFile)
+        {
+            QTextStream out(m_logFile.data());
+            if(!encodedStr.isEmpty())
+                out << encodedStr << Qt::endl;
+            else
+                out << str << Qt::endl;
+            out.flush();
+            // Проверка ошибки после записи
+            if (out.status() != QTextStream::Ok ||
+                m_logFile->error() != QFile::NoError) {
+                qCritical() << "File log write error:" << m_logFile->errorString();
+            }
+        }
     }
-    if(m_fileExist && m_enableFile)
-    {
-        QTextStream out(m_logFile.data());
-        out << str << Qt::endl;
-        out.flush();
-    }
-    mutex.unlock();
-    if(Console){
-        emit Console->sigAppendFormatedLine(type, date, func, msg);
-        // if(QThread::currentThread() == QApplication::instance()->thread())
-        //     Console->appendFormatedLine(type, date, func, msg); // напрямую если тотже поток
-        // else
-        // {
-        //     emit Console->sigAppendFormatedLine(type, date, func, msg); // через очередь
-        //     QApplication::processEvents(); // обрабатываем события (чтобы сообщение успело сделать вывод в виджет)
-        // }
 
+    auto c = m_consoleInstance.load();
+    if(c){
+        if(QThread::currentThread() != qApp->thread()){
+            emit c->sigAppendFormatedLine(type, date, func, msg);
+        } else {
+            c->appendFormatedLine(type, date, func, msg);
+        }
     }
-
 }
-
 
 void Logging::setLogConsole(LogConsoleWidget *c)
 {
-    Console = c;
+    m_consoleInstance = c;
 }
 Logging::LogConsoleWidget* Logging::getLogConsole()
 {
-    return Console;
+    return m_consoleInstance;
 }
 
 Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowFlags f)
@@ -186,6 +213,7 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowF
     setEnableFileLogging(true);
     setEnableConsoleLogging(true);
     setEnableDebug(true);
+    setEnableFileEncoding(false);
     qInstallMessageHandler(messageHandler);
     LogConsoleWidget *Console = new LogConsoleWidget(parent, f);
     setLogConsole(Console);
@@ -204,6 +232,15 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowF
     setLoggingFile(Console->getLogFilePath());
 
 
+    if(parent == nullptr){
+    // установка SteleSheets
+        QFile f(":/Console/resources/StyleSheetTolmi1.qss");
+        f.open(QFile::ReadOnly);
+        QString style = f.readAll();
+        f.close();
+        //Console->setStyleSheet(style);
+    }
+
     //загрузка настроек
     QString defSettings(logDir.absoluteFilePath("ConsoleDefaultSettings.ini"));
     if(QFileInfo::exists(defSettings))
@@ -217,3 +254,5 @@ Logging::LogConsoleWidget *Logging::quickNewConsole(QWidget *parent, Qt::WindowF
 
     return Console;
 }
+
+

@@ -41,6 +41,7 @@ set(PROJECT_SOURCES
     Logging.h
     LogConsoleWidget.h
     LogWidgetSettings.h
+		LoggingEncoder.h
 )
 
 # Добавим файлы форм

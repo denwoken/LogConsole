@@ -2,6 +2,7 @@
 #include "LogConsoleWidget.h"
 #include "qcolordialog.h"
 #include "qdebug.h"
+#include "qfiledialog.h"
 #include "ui_LogWidgetSettings.h"
 
 using namespace Logging;
@@ -15,7 +16,7 @@ LogWidgetSettings::LogWidgetSettings(LogConsoleWidget *parent):
     m_colorDialog = new QColorDialog();
     m_colorDialog->setStyleSheet(parent->styleSheet());
     m_colorDialog->setWindowFlags(Qt::FramelessWindowHint );  //| Qt::Popup Отключаем рамки и включаем режим Popup
-    m_colorDialog->setStyleSheet(m_colorDialog->styleSheet() + "QColorDialog { background-color: rgb(48,48,48); }");
+    m_colorDialog->setStyleSheet(parent->styleSheet());//+ "QColorDialog { background-color: rgb(48,48,48); }"
 
     loadSettings();
 
@@ -25,31 +26,31 @@ LogWidgetSettings::LogWidgetSettings(LogConsoleWidget *parent):
     //     ui->fontComboBox->setFont(f);
     // });
 
-    connect(ui->pushButton_LogLevelColor, &QPushButton::clicked,
+    connect(ui->pushButton_LogLevelColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_LogLevelColor); });
-    connect(ui->pushButton_dateColor, &QPushButton::clicked,
+    connect(ui->pushButton_dateColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_dateColor); });
-    connect(ui->pushButton_funcNameColor, &QPushButton::clicked,
+    connect(ui->pushButton_funcNameColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_funcNameColor); });
-    connect(ui->pushButton_timeColor, &QPushButton::clicked,
+    connect(ui->pushButton_timeColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_timeColor); });
-    connect(ui->pushButton_InfoMsgColor, &QPushButton::clicked,
+    connect(ui->pushButton_InfoMsgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_InfoMsgColor); });
-    connect(ui->pushButton_DebugMsgColor, &QPushButton::clicked,
+    connect(ui->pushButton_DebugMsgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_DebugMsgColor); });
-    connect(ui->pushButton_WarningMsgColor, &QPushButton::clicked,
+    connect(ui->pushButton_WarningMsgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_WarningMsgColor); });
-    connect(ui->pushButton_CriticalMsgColor, &QPushButton::clicked,
+    connect(ui->pushButton_CriticalMsgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_CriticalMsgColor); });
-    connect(ui->pushButton_CriticalMsgBgColor, &QPushButton::clicked,
+    connect(ui->pushButton_CriticalMsgBgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_CriticalMsgBgColor); });
-    connect(ui->pushButton_FatalMsgColor, &QPushButton::clicked,
+    connect(ui->pushButton_FatalMsgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_FatalMsgColor); });
-    connect(ui->pushButton_FatalMsgBgColor, &QPushButton::clicked,
+    connect(ui->pushButton_FatalMsgBgColor, &QPushButton::clicked, this,
             [&]() { this->openColorDialog(ui->pushButton_FatalMsgBgColor); });
 
-    connect(ui->pushButton_openLogFile, &QPushButton::clicked,
-            [&]() { m_console->loadLogsHistory(ui->lineEdit_logFilePath->text()); });
+    // connect(ui->pushButton_openLogFile, &QPushButton::clicked,
+    //         [&]() { m_console->loadLogsHistory(ui->lineEdit_logFilePath->text()); });
 
 }
 
@@ -172,16 +173,90 @@ void LogWidgetSettings::on_checkBox_dispTime_stateChanged(int arg1)
 
 void LogWidgetSettings::on_pushButton_saveConsoleSettings_clicked()
 {
-    QString str = ui->lineEdit_ConsoleSettingsPath->text();
+    //QString str = ui->lineEdit_ConsoleSettingsPath->text();
     saveSettings();
-    m_console->saveSettings(str);
+    m_console->saveSettings(m_console->getConsoleSettingsPath());
+    //m_console->saveSettings(str);
     this->accept();
 }
 
 
 void LogWidgetSettings::on_pushButton_loadConsoleSettings_clicked()
 {
-    QString str = ui->lineEdit_ConsoleSettingsPath->text();
-    m_console->loadSettings(str);
+    QString fileType = tr("Console Settings(*.ini);;All Files(*.*)");
+    QFileDialog* fileDialog = new QFileDialog(this);
+    fileDialog->setFileMode(QFileDialog::FileMode::ExistingFile);
+    fileDialog->setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
+    fileDialog->setViewMode(QFileDialog::ViewMode::Detail);
+    fileDialog->setNameFilter(fileType);
+
+    QFileInfo fileinfo(m_console->getConsoleSettingsPath());
+    fileDialog->setDirectory(fileinfo.dir());
+    fileDialog->selectFile(m_console->getConsoleSettingsPath());
+
+    if(fileDialog->exec()){
+        auto files = fileDialog->selectedFiles();
+        if(files.size()){
+            ui->lineEdit_ConsoleSettingsPath->setText(files[0]);
+            m_console->loadSettings(files[0]);
+            loadSettings();
+            this->accept();
+        }
+    }
+
+    // QString str = ui->lineEdit_ConsoleSettingsPath->text();
+    // m_console->loadSettings(str);
+}
+
+
+void LogWidgetSettings::on_pushButton_openLogFile_clicked()
+{
+    QString fileType = tr("LogFile(*.log);;TolmiLogFile(*.tlog);;All Files(*.*)");
+    QFileDialog* fileDialog = new QFileDialog(this);
+    fileDialog->setFileMode(QFileDialog::FileMode::ExistingFile);
+    fileDialog->setAcceptMode(QFileDialog::AcceptMode::AcceptOpen);
+    fileDialog->setViewMode(QFileDialog::ViewMode::Detail);
+    fileDialog->setNameFilter(fileType);
+
+    QFileInfo fileinfo(m_console->getLogFilePath());
+    fileDialog->setDirectory(fileinfo.dir());
+    fileDialog->selectFile(m_console->getLogFilePath());
+
+    if(fileDialog->exec()){
+        auto files = fileDialog->selectedFiles();
+        if(files.size()){
+            ui->lineEdit_logFilePath->setText(files[0]);
+            m_console->loadLogsHistory(files[0]);
+        }
+    }
+
+}
+
+
+void LogWidgetSettings::on_pushButton_saveAsConsoleSettings_clicked()
+{
+
+    QString fileType = tr("Settings(*.ini);;All Files(*.*)");
+    QFileDialog* fileDialog = new QFileDialog(this);
+    fileDialog->setFileMode(QFileDialog::FileMode::AnyFile);
+    fileDialog->setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+    fileDialog->setViewMode(QFileDialog::ViewMode::Detail);
+    fileDialog->setNameFilter(fileType);
+
+
+    QFileInfo fileinfo(m_console->getConsoleSettingsPath());
+    fileDialog->setDirectory(fileinfo.dir());
+    fileDialog->selectFile(m_console->getConsoleSettingsPath());
+
+    if(fileDialog->exec()){
+        auto files = fileDialog->selectedFiles();
+        if(files.size()){
+            ui->lineEdit_ConsoleSettingsPath->setText(files[0]);
+            m_console->m_settingsFilePath = files[0];
+            m_console->saveSettings(m_console->getConsoleSettingsPath());
+            this->accept();
+        }
+    }
+
 }
 
