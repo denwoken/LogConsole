@@ -823,6 +823,7 @@ void LogConsoleWidget::appendFormatedLine(const QString &line)
     curs.movePosition(QTextCursor::End);
 
     LogLine logLine(line);
+    emit appendedNewLine(logLine);
     m_history.append(logLine);
     m_FuncSelector->addFunction(logLine.functionStr);
     m_formatter->appendFormatedLine(&curs, line);
@@ -852,6 +853,7 @@ void LogConsoleWidget::appendFormatedLine(QtMsgType type, QDateTime date, QStrin
     curs.movePosition(QTextCursor::End);
 
     LogLine logLine(type, date, func, msg);
+    emit appendedNewLine(logLine);
     m_history.append(logLine);
     m_FuncSelector->addFunction(func);
     m_formatter->appendFormatedLine(&curs, type, date, func, msg);

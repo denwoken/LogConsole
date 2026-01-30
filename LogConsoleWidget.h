@@ -283,6 +283,10 @@ private:
     QPoint m_dragPosition;
 
 
+signals:
+    void appendedNewLine(const Logging::LogLine line);
+
+
     friend class ConsoleHighlighter;
     friend class LogWidgetSettings;
     friend class ConsoleFormatter;
