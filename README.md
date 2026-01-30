@@ -104,8 +104,8 @@ cmake --build .
 In your own `CMakeLists.txt`, you can then link against the exported target (assuming LogConsole is added as a subdirectory):	
 
 ```cmake
-add_subdirectory(LogConsole)
-target_link_libraries(your_target PRIVATE LogConsole)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/LogConsole)
+target_link_libraries(${PROJECT_NAME} PUBLIC LogConsoleLibrary)
 ```
 
 This approach is recommended when:
@@ -123,7 +123,8 @@ For **qmake-based projects**, LogConsole can also be integrated via a **`.pri`**
 Typical usage in your project `.pro` file:
 
 ```qmake
-include(path/to/LogConsole/LogConsole.pri)
+# include($$PWD/LogConsole/LogConsole.pri)
+# INCLUDEPATH += $$PWD/LogConsole
 ```
 
 This will add the required include paths, sources, and Qt modules to your project automatically.
