@@ -20,7 +20,7 @@ void LogLinesDisplayWidget::paintEvent(QPaintEvent *event)
     painter.setFont(m_font);
 
     int startLine = verticalScrollBar()->value(); // С какой строки начинать отображение
-    int endLine = qMin(startLine + m_visibleLines, m_text.size());
+    int endLine = qMin(startLine + m_data.visibleLines, m_text.size());
 
     qDebug() << "startLine " << startLine;
     qDebug() << "endLine " << endLine;
@@ -83,12 +83,12 @@ void LogLinesDisplayWidget::resizeEvent(QResizeEvent* event) {
 
 void LogLinesDisplayWidget::calculateVisibleLines() {
     m_lineHeight = fontMetrics().height();
-    m_visibleLines = viewport()->height() / m_lineHeight;
+    m_data.visibleLines = viewport()->height() / m_lineHeight;
 }
 
 void LogLinesDisplayWidget::updateScrollBar() {
-    verticalScrollBar()->setRange(0, m_text.size() - m_visibleLines);
-    verticalScrollBar()->setPageStep(m_visibleLines);
+    verticalScrollBar()->setRange(0, m_text.size() - m_data.visibleLines);
+    verticalScrollBar()->setPageStep(m_data.visibleLines);
 }
 
 

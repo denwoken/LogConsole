@@ -32,7 +32,7 @@ private:
     QFont m_font;         // Шрифт текста
     bool m_wordWrap;      // Режим переноса текста
     int m_lineHeight;     // Высота строки для текущего шрифта
-    int m_visibleLines;   // Количество видимых строк на экране
+    int m_data.visibleLines;   // Количество видимых строк на экране
     QPoint m_selectionStart, m_selectionEnd; // Для выделения текста
     QTimer* m_cursorTimer;
     bool m_cursorVisible;
