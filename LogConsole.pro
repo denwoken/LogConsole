@@ -30,11 +30,13 @@ HEADERS += \
     FunctionSelectorWidget.h \
     LogConsoleWidget.h \
     LogWidgetSettings.h \
-    Logging.h
+    Logging.h \
+    LoggingEncoder.h
 
 RESOURCES += \
-    resources.qrc
+    ConsoleResources.qrc
 
 DISTFILES += \
     CMakeLists.txt \
-    LogConsole.pri
+    LogConsole.pri \
+    README.md

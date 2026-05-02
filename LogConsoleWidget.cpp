@@ -2,6 +2,7 @@
 #include "FunctionSelectorWidget.h"
 #include "LogWidgetSettings.h"
 #include "Logging.h"
+#include "LoggingEncoder.h"
 #include "qdatetime.h"
 #include "qdebug.h"
 #include "qevent.h"
@@ -17,8 +18,8 @@
 #include <QWidget>
 #include <QTextEdit>
 #include <QtConcurrent>
-#include <qdockwidget.h>
 using namespace Logging;
+#include <qdockwidget.h>
 const int line_count = 50; // count in block (for history & processing)
 
 //загрука ресурсов (при загрузке статической )
@@ -53,7 +54,21 @@ QPair<QVector<LogLine>, QStringList> ConsoleFormatter::stringList2LogLines(const
 
     for(const QString& line : block){
         if(line.isEmpty()) continue;
-        LogLine logLine(line);
+        LogLine logLine;
+
+        QString decodedLine;
+        bool success = Logging::Encoder::decodeLineString(line, decodedLine);
+        if(success && decodedLine.size()){
+            logLine = LogLine(decodedLine);
+        } else {
+            logLine = LogLine(line);
+        }
+        //parse or decoding Error
+        if(logLine.only_message){
+            logLine.type = QtWarningMsg;
+            logLine.message = "LogLine decoding Error: " + logLine.message;
+        }
+
         functions.append(logLine.functionStr);
         logLines.append(logLine);
     }
@@ -808,6 +823,7 @@ void LogConsoleWidget::appendFormatedLine(const QString &line)
     curs.movePosition(QTextCursor::End);
 
     LogLine logLine(line);
+    emit appendedNewLine(logLine);
     m_history.append(logLine);
     m_FuncSelector->addFunction(logLine.functionStr);
     m_formatter->appendFormatedLine(&curs, line);
@@ -837,6 +853,7 @@ void LogConsoleWidget::appendFormatedLine(QtMsgType type, QDateTime date, QStrin
     curs.movePosition(QTextCursor::End);
 
     LogLine logLine(type, date, func, msg);
+    emit appendedNewLine(logLine);
     m_history.append(logLine);
     m_FuncSelector->addFunction(func);
     m_formatter->appendFormatedLine(&curs, type, date, func, msg);
@@ -962,6 +979,7 @@ void LogConsoleWidget::updateContent()
 
 LogLine::LogLine(const QString &line){
     if(line.isEmpty()) return;
+
     int msgSepIndex = line.indexOf(" >> ");  // промт разделяющий сообщение и информацию
     if(msgSepIndex == -1){
         message = line;

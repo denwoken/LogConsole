@@ -33,6 +33,10 @@ private slots:
 
     void on_pushButton_loadConsoleSettings_clicked();
 
+    void on_pushButton_openLogFile_clicked();
+
+    void on_pushButton_saveAsConsoleSettings_clicked();
+
 private:
     Ui::LogWidgetSettings *ui;
     LogConsoleWidget *m_console;

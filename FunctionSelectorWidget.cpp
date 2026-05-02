@@ -14,6 +14,7 @@ using namespace Logging;
 FunctionSelectorWidget::FunctionSelectorWidget(LogConsoleWidget* parent):
     QDialog(parent), m_parent(parent) {
     setProperty("ClassName", "FunctionSelectorWidget");// Регистрируем LogConsoleWidget для Qt Style Sheets
+    setStyleSheet(parent->styleSheet());
     setMinimumSize(250, 300);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);  // Отключаем рамки и включаем режим Popup
     QVBoxLayout* layout = new QVBoxLayout(this);

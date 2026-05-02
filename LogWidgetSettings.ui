@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>523</width>
+    <width>541</width>
     <height>418</height>
    </rect>
   </property>
@@ -57,43 +57,28 @@
         </property>
         <item row="1" column="2">
          <widget class="QPushButton" name="pushButton_saveConsoleSettings">
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="text">
            <string>Сохранить</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="lineEdit_logFilePath">
-          <property name="text">
-           <string>logFile.log</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_14">
-          <property name="text">
-           <string>Файл настроек</string>
           </property>
          </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>Файл логов</string>
+           <string>Логи</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="3">
-         <widget class="QPushButton" name="pushButton_loadConsoleSettings">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_14">
           <property name="text">
-           <string>Загрузить</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QPushButton" name="pushButton_openLogFile">
-          <property name="text">
-           <string>Открыть</string>
+           <string>Настройки</string>
           </property>
          </widget>
         </item>
@@ -101,6 +86,55 @@
          <widget class="QLineEdit" name="lineEdit_ConsoleSettingsPath">
           <property name="text">
            <string>ConsoleDefaultSettings.ini</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QPushButton" name="pushButton_loadConsoleSettings">
+          <property name="maximumSize">
+           <size>
+            <width>66</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Загрузить</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="pushButton_saveAsConsoleSettings">
+          <property name="maximumSize">
+           <size>
+            <width>95</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Cохранить как</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="pushButton_openLogFile">
+          <property name="maximumSize">
+           <size>
+            <width>65</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Открыть</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="3">
+         <widget class="QLineEdit" name="lineEdit_logFilePath">
+          <property name="text">
+           <string>logFile.log</string>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
